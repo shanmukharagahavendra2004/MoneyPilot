@@ -1,11 +1,3 @@
-# MoneyPilot
-MoneyPilot is an AI-powered personal finance tracker that helps users manage income, track expenses, make secure payments via Razorpay, and get smart insights on spending, savings, and affordability using real-time data and predictive analytics.
-
-Here’s a **product-grade README** you can directly put in your GitHub repo.
-This is written the way **real fintech startups document their products**.
-
----
-
 # 💰 MoneyPilot – AI Powered Personal Finance Tracker
 
 MoneyPilot is a full-stack fintech application that helps users track income, manage expenses, make secure payments, and get AI-driven financial insights. It acts as a **personal CFO**, telling users what they spend, save, and whether they can afford a purchase — all in real time.
