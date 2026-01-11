@@ -1,0 +1,35 @@
+package com.example.financetracker.repo;
+
+import com.example.financetracker.model.Bill;
+import com.example.financetracker.model.CategoryAnalytics;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public interface BillRepo extends JpaRepository<Bill, Long> {
+
+    @Query("""
+        SELECT new com.example.financetracker.model.CategoryAnalytics(
+            b.category,
+            SUM(b.amount)
+        )
+        FROM Bill b
+        WHERE b.user.id = :userId
+        AND b.createdAt BETWEEN :startDate AND :endDate
+        GROUP BY b.category
+    """)
+    List<CategoryAnalytics> getMonthlyCategoryAnalytics(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    // ✅ Fixed derived query for @ManyToOne relation
+    List<Bill> findByUser_Id(Long userId);
+}
+
+
+
