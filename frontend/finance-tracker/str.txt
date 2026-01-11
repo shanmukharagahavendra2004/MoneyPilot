@@ -1,0 +1,133 @@
+smart-pay-frontend/
+│
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   └── manifest.json
+│
+├── src/
+│   ├── assets/
+│   │   ├── icons/
+│   │   └── images/
+│   │
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   └── Input.tsx
+│   │   ├── layout/
+│   │   │   ├── Navbar.tsx
+│   │   │   └── Sidebar.tsx
+│   │   └── dashboard/
+│   │       ├── StatsCard.tsx
+│   │       └── ExpenseChart.tsx
+│   │
+│   ├── pages/
+│   │   ├── Login.tsx
+│   │   ├── Register.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── Payments.tsx
+│   │   ├── Subscriptions.tsx
+│   │   ├── Bills.tsx
+│   │   ├── AddBill.tsx
+│   │   └── Settings.tsx
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.ts
+│   │   └── useFetch.ts
+│   │
+│   ├── context/
+│   │   ├── AuthContext.tsx
+│   │   └── PaymentContext.tsx
+│   │
+│   ├── services/
+│   │   ├── api.ts  (Axios setup)
+│   │   └── payment.service.ts
+│   │
+│   ├── types/
+│   │   ├── Payment.ts
+│   │   ├── User.ts
+│   │   └── Subscription.ts
+│   │
+│   ├── utils/
+│   │   ├── formatDate.ts
+│   │   └── constants.ts
+│   │
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css  (import Tailwind)
+│
+├── tailwind.config.js
+├── tsconfig.json
+├── package.json
+└── README.md
+
+
+smart-pay-backend/
+│
+├── src/
+│   ├── main/
+│   │   ├── java/com/smartpay/
+│   │   │   ├── SmartPayApplication.java
+│   │   │   │
+│   │   │   ├── config/
+│   │   │   │   ├── SecurityConfig.java
+│   │   │   │   ├── CorsConfig.java
+│   │   │   │   └── RedisConfig.java (optional)
+│   │   │   │
+│   │   │   ├── controller/
+│   │   │   │   ├── AuthController.java
+│   │   │   │   ├── PaymentController.java
+│   │   │   │   ├── BillController.java
+│   │   │   │   └── SubscriptionController.java
+│   │   │   │
+│   │   │   ├── service/
+│   │   │   │   ├── JWTService.java
+│   │   │   │   ├── UserService.java
+│   │   │   │   ├── PaymentService.java
+│   │   │   │   ├── BillService.java
+│   │   │   │   ├── SubscriptionService.java
+│   │   │   │   └── ReminderService.java (cron jobs)
+│   │   │   │
+│   │   │   ├── repository/
+│   │   │   │   ├── UserRepository.java
+│   │   │   │   ├── PaymentRepository.java
+│   │   │   │   ├── BillRepository.java
+│   │   │   │   └── SubscriptionRepository.java
+│   │   │   │
+│   │   │   ├── model/
+│   │   │   │   ├── User.java
+│   │   │   │   ├── Payment.java
+│   │   │   │   ├── Bill.java
+│   │   │   │   └── Subscription.java
+│   │   │   │
+│   │   │   ├── dto/
+│   │   │   │   ├── LoginRequest.java
+│   │   │   │   ├── RegisterRequest.java
+│   │   │   │   ├── PaymentRequest.java
+│   │   │   │   └── BillRequest.java
+│   │   │   │
+│   │   │   ├── exceptions/
+│   │   │   │   ├── GlobalExceptionHandler.java
+│   │   │   │   └── ResourceNotFoundException.java
+│   │   │   │
+│   │   │   ├── tasks/
+│   │   │   │   └── ReminderScheduler.java (cron)
+│   │   │   │
+│   │   │   └── util/
+│   │   │       ├── EmailUtil.java
+│   │   │       └── PaymentUtil.java
+│   │   │
+│   │   ├── resources/
+│   │   │   ├── application.properties
+│   │   │   ├── schema.sql
+│   │   │   └── data.sql
+│   │   │
+│   │   └── webapp/
+│   │
+│   └── test/
+│       └── java/com/smartpay/
+│           └── SmartPayApplicationTests.java
+│
+├── pom.xml
+└── README.md
