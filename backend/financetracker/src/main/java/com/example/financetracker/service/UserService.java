@@ -36,10 +36,9 @@ public class UserService {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
 
-            User user = repo.findByUsername(username)
+            User user = repo.findByUsernameOrEmail(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            System.out.println("User "+user);
-
+            System.out.println("user "+user.getId()+" "+ user.getUsername());
             // Generate JWT with userId + username
             return jwtService.generateToken(user.getId(), user.getUsername());
 

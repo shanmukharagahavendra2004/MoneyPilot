@@ -22,6 +22,8 @@ public class UserController {
 
     @PostMapping("/login")
     public String login(@RequestBody UserLogin login) {
+        System.out.println(login.getUsername()+" "+ // Fixed getter
+                login.getPassword());
         String result = service.verify(
                 login.getUsername(), // Fixed getter
                 login.getPassword()

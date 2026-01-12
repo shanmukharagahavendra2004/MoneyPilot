@@ -8,20 +8,32 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [salary, setSalary] = useState('');
 
+  // ✅ NEW
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // ✅ Password match check
+    if (password !== confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    } else {
+      setError('');
+    }
+
     const user = { username:userName, email, password, salary: Number(salary) };
 
     try {
       const res = await axios.post('http://localhost:9090/api/users/signup', user);
-      
 
       setuserName('');
       setEmail('');
       setPassword('');
+      setConfirmPassword(''); // ✅ reset
       setSalary('');
 
       navigate('/login');
@@ -69,7 +81,17 @@ const Signup = () => {
           required
         />
 
-         <input
+        {/* ✅ Re-enter password field */}
+        <input
+          className="border-2 border-black p-2 sm:p-3 w-full focus:outline-none focus:border-blue-700 rounded"
+          type="password"
+          placeholder="Re-enter the password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+
+        <input
           className="border-2 border-black p-2 sm:p-3 w-full focus:outline-none focus:border-blue-700 rounded"
           type="number"
           placeholder="Enter your monthly salary"
@@ -78,14 +100,19 @@ const Signup = () => {
           required
         />
 
-
-
         <button
           className="border-2 border-black bg-amber-300 p-2 sm:p-3 w-full font-bold cursor-pointer text-lg sm:text-xl rounded hover:bg-amber-400 transition"
           type="submit"
         >
           Signup
         </button>
+
+        {/* ✅ Error shown below button */}
+        {error && (
+          <p className="text-red-600 text-center font-semibold">
+            {error}
+          </p>
+        )}
       </form>
     </div>
   );
