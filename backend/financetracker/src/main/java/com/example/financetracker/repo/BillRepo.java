@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 public interface BillRepo extends JpaRepository<Bill, Long> {
@@ -27,9 +28,15 @@ public interface BillRepo extends JpaRepository<Bill, Long> {
             @Param("endDate") LocalDateTime endDate
     );
 
-    // ✅ Fixed derived query for @ManyToOne relation
+    // Original method – works with @ManyToOne User
     List<Bill> findByUser_Id(Long userId);
+
+    // ✅ Safe helper method to avoid null or invalid userId
+    default List<Bill> safeFindByUserId(Long userId) {
+        if (userId == null || userId <= 0) {
+            return Collections.emptyList();
+        }
+        List<Bill> bills = findByUser_Id(userId);
+        return bills != null ? bills : Collections.emptyList();
+    }
 }
-
-
-

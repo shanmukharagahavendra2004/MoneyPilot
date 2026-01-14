@@ -9,6 +9,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
 
@@ -25,25 +27,50 @@ public class UserService {
 
     @Transactional
     public User signup(User user) {
-        user.setPassword(encoder.encode(user.getPassword()));
-        return repo.save(user);
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        if (user.getUsername() == null || user.getPassword() == null) {
+            throw new IllegalArgumentException("Username and password must be provided");
+        }
+
+        try {
+            // Encode password
+            user.setPassword(encoder.encode(user.getPassword()));
+            // Save user safely
+            return repo.save(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error while signing up user: " + e.getMessage());
+        }
     }
 
     public String verify(String username, String password) {
+        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+            return "Username and password must be provided";
+        }
+
         try {
             // Authenticate user credentials
             authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
 
-            User user = repo.findByUsernameOrEmail(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            System.out.println("user "+user.getId()+" "+ user.getUsername());
+            Optional<User> optionalUser = repo.findByUsernameOrEmail(username);
+
+            if (optionalUser.isEmpty()) {
+                return "User not found";
+            }
+
+            User user = optionalUser.get();
+            System.out.println("Authenticated user: " + user.getId() + " " + user.getUsername());
+
             // Generate JWT with userId + username
             return jwtService.generateToken(user.getId(), user.getUsername());
 
         } catch (Exception e) {
-            return "Invalid username or password";
+            e.printStackTrace();
+            return "Invalid username or password: " + e.getMessage();
         }
     }
 }

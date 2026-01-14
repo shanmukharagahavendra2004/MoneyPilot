@@ -4,9 +4,9 @@ import com.example.financetracker.model.CategoryAnalytics;
 import com.example.financetracker.repo.BillRepo;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -23,14 +23,39 @@ public class AnalyticsService {
             int month,
             int year
     ) {
-        YearMonth yearMonth = YearMonth.of(year, month);
+        try {
+            // Defensive checks
+            if (userId == null || userId <= 0) {
+                System.err.println("Invalid userId: " + userId);
+                return Collections.emptyList();
+            }
+            if (month < 1 || month > 12) {
+                System.err.println("Invalid month: " + month);
+                return Collections.emptyList();
+            }
+            if (year < 1900 || year > 3000) {
+                System.err.println("Invalid year: " + year);
+                return Collections.emptyList();
+            }
 
-        LocalDateTime startDate = yearMonth.atDay(1).atStartOfDay();
-        LocalDateTime endDate = yearMonth.atEndOfMonth().atTime(23, 59, 59);
-        List<CategoryAnalytics> analytics = billRepo.getMonthlyCategoryAnalytics(userId, startDate, endDate);
+            // Compute start and end of month
+            YearMonth yearMonth = YearMonth.of(year, month);
+            LocalDateTime startDate = yearMonth.atDay(1).atStartOfDay();
+            LocalDateTime endDate = yearMonth.atEndOfMonth().atTime(23, 59, 59);
 
-        System.out.println("Monthly Analytics for user " + userId + ": " + analytics); // ✅ Logs to console
+            // Fetch analytics
+            List<CategoryAnalytics> analytics = billRepo.getMonthlyCategoryAnalytics(userId, startDate, endDate);
+            if (analytics == null) {
+                return Collections.emptyList();
+            }
 
-        return analytics;
+            System.out.println("Monthly Analytics for user " + userId + ": " + analytics);
+
+            return analytics;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
     }
 }

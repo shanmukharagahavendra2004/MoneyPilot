@@ -1,7 +1,6 @@
 package com.example.financetracker.controller;
 
 import com.example.financetracker.model.Payment;
-
 import com.example.financetracker.model.PaymentVerifyRequest;
 import com.example.financetracker.model.User;
 import com.example.financetracker.repo.PaymentRepo;
@@ -9,6 +8,7 @@ import com.example.financetracker.repo.UserRepo;
 import com.example.financetracker.service.PaymentService;
 import com.razorpay.Order;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,16 +35,27 @@ public class PaymentController {
 
     // CREATE ORDER
     @PostMapping(value = "/create-order", produces = "application/json")
-    public ResponseEntity<Map<String, Object>> createOrder(@RequestParam BigDecimal amount) throws Exception {
-        Order order = paymentService.createOrder(amount);
+    public ResponseEntity<?> createOrder(@RequestParam BigDecimal amount) {
+        try {
+            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Amount must be greater than 0");
+            }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", order.get("id"));
-        response.put("amount", order.get("amount"));
-        response.put("currency", order.get("currency"));
-        response.put("receipt", order.get("receipt"));
+            Order order = paymentService.createOrder(amount);
 
-        return ResponseEntity.ok(response);
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", order.get("id"));
+            response.put("amount", order.get("amount"));
+            response.put("currency", order.get("currency"));
+            response.put("receipt", order.get("receipt"));
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error creating order: " + e.getMessage());
+        }
     }
 
     // VERIFY & SAVE PAYMENT
@@ -52,34 +63,62 @@ public class PaymentController {
     public ResponseEntity<?> verifyPayment(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody PaymentVerifyRequest request
-    ) throws Exception {
-        // Fetch User entity from JWT
-        User user = userRepo.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    ) {
+        try {
+            if (userDetails == null || userDetails.getUsername() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("User not authenticated");
+            }
+            if (request == null || request.getRazorpayPaymentId() == null ||
+                    request.getRazorpayOrderId() == null || request.getRazorpaySignature() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Invalid payment request data");
+            }
 
-        // Call service with User object, not userId
-        paymentService.verifyAndSavePayment(
-                request.getRazorpayPaymentId(),
-                request.getRazorpayOrderId(),
-                request.getRazorpaySignature(),
-                user,                  // ✅ pass user directly
-                request.getAmount(),
-                request.getPaymentType(),
-                request.getBillName(),
-                request.getCategory()
-        );
+            // Fetch User entity safely
+            User user = userRepo.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok("Payment verified successfully");
+            // Call service
+            paymentService.verifyAndSavePayment(
+                    request.getRazorpayPaymentId(),
+                    request.getRazorpayOrderId(),
+                    request.getRazorpaySignature(),
+                    user,
+                    request.getAmount(),
+                    request.getPaymentType(),
+                    request.getBillName(),
+                    request.getCategory()
+            );
+
+            return ResponseEntity.ok("Payment verified successfully");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error verifying payment: " + e.getMessage());
+        }
     }
-
 
     // GET PAYMENTS OF LOGGED-IN USER
     @GetMapping("/user")
-    public List<Payment> getUserPayments(@AuthenticationPrincipal UserDetails userDetails) {
-        String username = userDetails.getUsername();
-        User user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<?> getUserPayments(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            if (userDetails == null || userDetails.getUsername() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("User not authenticated");
+            }
 
-        return paymentService.getPaymentsByUser(user.getId());
+            User user = userRepo.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            List<Payment> payments = paymentService.getPaymentsByUser(user.getId());
+            return ResponseEntity.ok(payments);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error fetching payments: " + e.getMessage());
+        }
     }
 }

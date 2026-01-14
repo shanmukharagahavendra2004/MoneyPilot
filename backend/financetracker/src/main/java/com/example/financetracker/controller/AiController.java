@@ -27,31 +27,57 @@ public class AiController {
     public ResponseEntity<?> queryAI(@RequestBody Map<String, Object> body,
                                      @AuthenticationPrincipal UserDetails userDetails) {
 
-        // ✅ Get the currently logged-in username from JWT
-        String username = userDetails.getUsername();
+        try {
+            // 1️⃣ Defensive: JWT must exist
+            if (userDetails == null || userDetails.getUsername() == null) {
+                return ResponseEntity.status(401).body("Unauthorized: JWT missing");
+            }
 
-        // Fetch User entity to get the actual userId
-        var user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Long userId = user.getId();
+            String username = userDetails.getUsername();
 
-        System.out.println("JWT userId = " + userId);
-        System.out.println("Incoming request: " + body);
+            // 2️⃣ Defensive: User must exist
+            var userOpt = userRepo.findByUsername(username);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(401).body("Unauthorized: user not found");
+            }
 
-        // Add userId to the request for Flask
-        body.put("userId", userId);
+            var user = userOpt.get();
+            Long userId = user.getId();
 
-        String flaskUrl = "http://127.0.0.1:5000/analyze";
+            // 3️⃣ Defensive: Request body must exist
+            if (body == null || body.isEmpty()) {
+                return ResponseEntity.badRequest().body("Request body cannot be empty");
+            }
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-                flaskUrl,
-                body,
-                Map.class
-        );
+            System.out.println("JWT userId = " + userId);
+            System.out.println("Incoming request: " + body);
 
-        System.out.println("Flask response: " + response.getBody());
+            // 4️⃣ Inject authenticated userId (never trust frontend)
+            body.put("userId", userId);
 
-        return ResponseEntity.ok(response.getBody());
+            String flaskUrl = "http://127.0.0.1:5000/analyze";
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    flaskUrl,
+                    body,
+                    Map.class
+            );
+
+            // 5️⃣ Defensive: Flask must respond
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                return ResponseEntity.status(502)
+                        .body("AI service unavailable. Please try again later.");
+            }
+
+            System.out.println("Flask response: " + response.getBody());
+
+            return ResponseEntity.ok(response.getBody());
+
+        } catch (Exception e) {
+            // 6️⃣ Never expose internal stacktrace
+            System.err.println("AI Controller Error: " + e.getMessage());
+            return ResponseEntity.status(500)
+                    .body("Internal error while processing AI request");
+        }
     }
-
 }
